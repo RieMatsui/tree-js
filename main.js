@@ -1,8 +1,10 @@
 // シーンが入っているかを確認
 import * as THREE from "./build/three.module.js";
 import { OrbitControls } from "./jsm/controls/OrbitControls.js";
+import { FontLoader } from "./jsm/loaders/FontLoader.js";
+import { TextGeometry } from "./jsm/geometries/TextGeometry.js";
 
-let scene, camera, renderer, pointLight, pointLightHelper, controls;
+let scene, camera, renderer, pointLight, pointLightHelper, moonMesh, controls, text;
 
 window.addEventListener("load", init);
 
@@ -24,11 +26,11 @@ function init() {
   renderer.setPixelRatio(window.devicePixelRatio);
   document.body.appendChild(renderer.domElement);
 
-
   // テクスチャーを追加
   let texture = new THREE.TextureLoader().load("./textures/earth.jpg");
+  let moonTexture = new THREE.TextureLoader().load("./textures/moon.png");
 
-  // ジオメトリを作成
+  // 地球のジオメトリを作成
   let ballGeometory = new THREE.SphereGeometry(100, 64, 32)
 
   // マテリアルを作成
@@ -37,6 +39,20 @@ function init() {
   // メッシュ化する
   let ballMesh = new THREE.Mesh(ballGeometory, ballMerial);
   scene.add(ballMesh);
+  text = textRender();
+
+  // 月のジオメトリを作成
+  let moonGeometory = new THREE.SphereGeometry(20, 64, 32)
+
+  // マテリアルを作成
+  let moonMerial = new THREE.MeshPhysicalMaterial({ map: moonTexture });
+
+  // メッシュ化する
+  moonMesh = new THREE.Mesh(moonGeometory, moonMerial);
+  scene.add(moonMesh);
+  moonMesh.position.set(-200, -200, -200)
+
+  text = textRender();
 
   // 光原を追加
   let derectionalLight = new THREE.DirectionalLight(0xffffff, 2);
@@ -49,11 +65,12 @@ function init() {
   scene.add(pointLight);
 
   // ポイント光原を確認するためのヘルパーを作成
-  pointLightHelper = new THREE.PointLightHelper(pointLight, 30);
+  pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
   scene.add(pointLightHelper);
 
   // マウスで操作できるようにする
   controls = new OrbitControls(camera, renderer.domElement);
+
   animate();
 }
 
@@ -68,9 +85,38 @@ function onWindowResize() {
 }
 
 
+function textRender() {
+  // ローダーのインスタンスをつくる
+  const fontLoader = new FontLoader();
+
+  // typeface.jsを読み込む
+  return fontLoader.load('./fonts/Arial_Regular.json', (font) => {
+    const textGeometry = new TextGeometry('Hello World', {
+      font: font,
+      size: 40,
+      height: 10,
+      curveSegments: 1,
+      bevelEnabled: true,
+      bevelSize: 2,
+			bevelThickness: 1,
+    });
+
+    textGeometry.center();
+
+    // 文字の色をランダムに変更する
+    const textMaterial = new THREE.MeshBasicMaterial({ color: Math.random() * 0xffffff, overdraw: 0.5 });
+    const text = new THREE.Line(textGeometry, textMaterial);
+
+    scene.add(text);
+    text.position.set(0, 0 , 200);
+    return text;
+  });
+}
+
+
 function animate() {
-  // ポイント光源を球の周りを巡回させる
-  pointLight.position.set(
+  // 月を地球の周りを巡回させる
+  moonMesh.position.set(
     200 * Math.sin(Date.now() / 500),
     200 * Math.sin(Date.now() / 1000),
     200 * Math.cos(Date.now() / 500),
@@ -78,7 +124,3 @@ function animate() {
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
-
-
-
-
