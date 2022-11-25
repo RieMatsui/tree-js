@@ -1,8 +1,8 @@
 // シーンが入っているかを確認
-import * as THREE from "./build/three.module.js";
-import { OrbitControls } from "./jsm/controls/OrbitControls.js";
-import { FontLoader } from "./jsm/loaders/FontLoader.js";
-import { TextGeometry } from "./jsm/geometries/TextGeometry.js";
+import * as THREE from "../build/three.module.js";
+import { OrbitControls } from "../jsm/controls/OrbitControls.js";
+import { FontLoader } from "../jsm/loaders/FontLoader.js";
+import { TextGeometry } from "../jsm/geometries/TextGeometry.js";
 
 let scene, camera, renderer, pointLight, pointLightHelper, moonMesh, controls, text;
 
@@ -54,6 +54,8 @@ function init() {
 
   text = textRender();
 
+  createStarField();
+
   // 光原を追加
   let derectionalLight = new THREE.DirectionalLight(0xffffff, 2);
   derectionalLight.position.set(1, 1, 1);
@@ -65,8 +67,8 @@ function init() {
   scene.add(pointLight);
 
   // ポイント光原を確認するためのヘルパーを作成
-  pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
-  scene.add(pointLightHelper);
+  // pointLightHelper = new THREE.PointLightHelper(pointLight, 1);
+  // scene.add(pointLightHelper);
 
   // マウスで操作できるようにする
   controls = new OrbitControls(camera, renderer.domElement);
@@ -98,7 +100,7 @@ function textRender() {
       curveSegments: 1,
       bevelEnabled: true,
       bevelSize: 2,
-			bevelThickness: 1,
+      bevelThickness: 1,
     });
 
     textGeometry.center();
@@ -108,7 +110,7 @@ function textRender() {
     const text = new THREE.Line(textGeometry, textMaterial);
 
     scene.add(text);
-    text.position.set(0, 0 , 200);
+    text.position.set(0, 0, 200);
     return text;
   });
 }
@@ -123,4 +125,24 @@ function animate() {
   );
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
+}
+
+/**
+* fragment
+**/
+function createStarField() {
+  const geometry = new THREE.SphereBufferGeometry(1, 1, 1),
+    size = 1;
+  for (let i = 0; i < 1000; i++) {
+    const material = new THREE.MeshPhongMaterial({
+      color: 0xffffff,
+      flatShading: true
+    })
+    const mesh = new THREE.Mesh(geometry, material)
+    mesh.position.set(size * Math.random() - 0.5, size * Math.random() - 0.5, size * Math.random() - 0.5).normalize()
+    mesh.position.multiplyScalar(Math.random() * 800)
+    mesh.rotation.set(Math.random() * 2, Math.random() * 2, Math.random() * 2)
+    mesh.scale.x = mesh.scale.y = mesh.scale.z = Math.random() * 1.5
+    scene.add(mesh)
+  }
 }
